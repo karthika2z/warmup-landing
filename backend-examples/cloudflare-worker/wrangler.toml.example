@@ -1,0 +1,12 @@
+# Template only. Nothing has been created or deployed.
+name = "warmup-collect"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://warmup-landing.pages.dev"   # set to the real landing origin
+
+[[d1_databases]]
+binding = "DB"
+database_name = "warmup"
+database_id = "REPLACE_AFTER_wrangler_d1_create"
