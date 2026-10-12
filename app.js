@@ -23,7 +23,6 @@
       W.submitEmail(kind, input.value, { source_button: form.dataset.source || null }).then(function (res) {
         btn.disabled = false;
         if (res.ok) {
-          try { sessionStorage.setItem('warmup_email', input.value.trim()); } catch (x) {}
           onOk(input, status);
         } else {
           status.className = 'status err'; status.textContent = 'Something went wrong. Please try again.';
@@ -50,7 +49,6 @@
     fdForm.dataset.source = source;
     var st = fdForm.querySelector('.status'); st.textContent = ''; st.className = 'status';
     var inp = fdForm.querySelector('input[type=email]');
-    try { var prev = sessionStorage.getItem('warmup_email'); if (prev && !inp.value) inp.value = prev; } catch (x) {}
     if (typeof dlg.showModal === 'function') dlg.showModal(); else { dlg.setAttribute('open', ''); }
     document.body.style.overflow = 'hidden';
     inp.focus();

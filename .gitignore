@@ -1,0 +1,7 @@
+screenshots/live-*.png
+.DS_Store
+node_modules/
+.env
+.env.*
+*.log
+.wrangler/

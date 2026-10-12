@@ -1,7 +1,7 @@
 # Warmup — demand-test landing page
 
 Static, no-build, no-framework one-pager (HTML/CSS/vanilla JS, ~12 KB gzipped excl. OG image). Dark, mobile-first, 18+.
-**Status: local only. Not published, no repo created, no backend connected.** `WARMUP_CONFIG.mode` is `'local'`.
+Live: https://karthika2z.github.io/warmup-landing/ (GitHub Pages, `noindex`). `WARMUP_CONFIG.mode` is `'webhook'` with an **empty endpoint placeholder**: until the Apps Script `/exec` URL is added, forms show success but nothing is sent or stored. Set `debug: true` (or `mode: 'local'`) to log to the console + localStorage while developing.
 
 ## Files
 | File | Purpose |
@@ -12,7 +12,7 @@ Static, no-build, no-framework one-pager (HTML/CSS/vanilla JS, ~12 KB gzipped ex
 | `tracking.js` | Adapter: `Warmup.track(event, props)`, `Warmup.submitEmail(kind, email)`, UTM capture, `Warmup.stats()` |
 | `app.js` | UI wiring: forms, fake-door modal (focus trap, Esc, backdrop click, focus return) |
 | `assets/favicon.svg`, `assets/og.png` | Icon; 1200×630 social preview (rendered from the page) |
-| `backend-examples/` | Not deployed: Cloudflare Worker + D1 (`worker.js`, `schema.sql`, `funnel.sql`, `wrangler.toml.example`), Google Apps Script (`Code.gs`) |
+| `backend-examples/` | Not deployed (Apps Script is the planned backend): Cloudflare Worker + D1 (`worker.js`, `schema.sql`, `funnel.sql`, `wrangler.toml.example`), Google Apps Script (`Code.gs`) |
 | `screenshots/` | Mobile 375×667 (hero, full, modal, modal submitted), desktop 1280×800 (hero, full) |
 
 ## Events

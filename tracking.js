@@ -5,9 +5,11 @@
   'use strict';
   var C = window.WARMUP_CONFIG || { mode: 'local', utmKeys: ['utm_source', 'utm_medium', 'utm_campaign'], storagePrefix: 'warmup_' };
   var P = C.storagePrefix || 'warmup_';
+  var DEV = C.mode === 'local' || C.debug === true;
 
   function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(P + k); sessionStorage.setItem(P + k, v); } catch (e) { return null; } }
   function lsPush(k, item, cap) {
+    if (!DEV) return; // production: keep nothing (no PII) in localStorage
     try {
       var arr = JSON.parse(localStorage.getItem(P + k) || '[]');
       arr.push(item); if (arr.length > (cap || 1000)) arr = arr.slice(-cap);
@@ -46,16 +48,17 @@
         .then(function (r) { return { ok: r.ok, status: r.status }; })
         .catch(function (e) { return { ok: false, error: String(e) }; });
     }
-    if (C.mode !== 'webhook' || !C.endpoint) return Promise.resolve({ ok: true, mode: 'local' });
+    if (C.mode !== 'webhook' || !C.endpoint) return Promise.resolve({ ok: true, mode: C.mode === 'webhook' ? 'no-endpoint' : 'local' });
+    // Apps Script can't answer CORS preflights: send a "simple" request (text/plain) and don't read the reply.
     var body = JSON.stringify(payload);
-    // text/plain avoids a CORS preflight (works with Apps Script and simple Workers).
     if (!wait && navigator.sendBeacon) {
-      var ok = navigator.sendBeacon(C.endpoint, new Blob([body], { type: 'text/plain;charset=UTF-8' }));
-      return Promise.resolve({ ok: ok, mode: 'beacon' });
+      try {
+        if (navigator.sendBeacon(C.endpoint, new Blob([body], { type: 'text/plain;charset=UTF-8' }))) return Promise.resolve({ ok: true, mode: 'beacon' });
+      } catch (e) { /* fall through to fetch */ }
     }
-    return fetch(C.endpoint, { method: 'POST', body: body, headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, keepalive: true, mode: wait ? 'cors' : 'no-cors' })
-      .then(function (r) { return { ok: r.ok || r.type === 'opaque', status: r.status }; })
-      .catch(function (e) { return { ok: false, error: String(e) }; });
+    return fetch(C.endpoint, { method: 'POST', mode: 'no-cors', keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: body })
+      .then(function () { return { ok: true, mode: 'no-cors' }; }) // opaque response: delivered as far as the browser can tell
+      .catch(function (e) { if (DEV) console.warn('[warmup] send failed', e); return { ok: false, error: 'network' }; });
   }
 
   function goat(event) {
@@ -69,7 +72,7 @@
   function track(event, props) {
     var payload = assign(assign({ type: 'event', event: String(event), event_id: uid() }, context()), props || {});
     lsPush('events', payload, 1000);
-    if (C.debug !== false) console.info('[warmup] event', event, payload);
+    if (C.debug === true) console.info('[warmup] event', event, payload);
     goat(event);
     return send(payload, false);
   }
@@ -80,7 +83,7 @@
     if (!EMAIL_RE.test(email) || email.length > 254) return Promise.resolve({ ok: false, error: 'invalid_email' });
     var payload = assign(assign({ type: 'signup', kind: kind, email: email, signup_id: uid() }, context()), extra || {});
     lsPush('signups', payload, 1000);
-    if (C.debug !== false) console.info('[warmup] signup', kind, payload);
+    if (C.debug === true) console.info('[warmup] signup', kind, payload);
     return send(payload, true).then(function (res) {
       if (res.ok) track(kind === 'fake_door' ? 'fake_door_signup' : 'waitlist_signup', { kind: kind });
       return res;
